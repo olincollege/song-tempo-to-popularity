@@ -3,82 +3,56 @@ Scraping Billboard Top 100's most popular songs from 1950 - Present day
 
 Produce a csv containing a 72x100 table (each row is a year, each column is a ranking)
 """
-# need to get year, rank, track, artist
-
-from numpy import char
+from billboard_functions import *
+from os import remove
+from stat import SF_APPEND
+import pandas as pd
 import requests
-import json
 from bs4 import BeautifulSoup
+
+# create data frame
+df = pd.DataFrame(index = range(1,101), columns = range(1940,2021))
+# 1945 - 2014 are all <div> tags for the body
+year = 1945
+# loop through 1945 to 2014 (all tr tags)
+while year <= 2014:
+    data = get_data(year)
+    music_data = data.findAll("td")
+    clean_data = remove_long_tags("<td", music_data)
+    split_list = split_list_into_three(clean_data)
+    import_to_df(split_list, year, df)
+
+    year += 1
 # 1963
-url = "http://billboardtop100of.com/1963-2/"
-response = requests.get(url)
-soup = BeautifulSoup(response.content, 'html.parser')
-s = soup.findAll('tr')
+# soup = get_data(1963)
+# s = soup.findAll('tr')
+# s = s[:2]
 
-print(s)
+# split_list = []
+# for element in s:
+#     element = str(element)
+#     split_element = element.split("</td>")
+#     split_list.extend(split_element[:-1])
+# clean_list = remove_long_tags("<td", split_list)
 
-for item in s:
-    remove_td = item.replace("<td>", "")
-    remove_td = remove_td.replace("</td>", "")
 # 2018
 # url = "http://billboardtop100of.com/2018-2/"
 # response = requests.get(url)
 # soup = BeautifulSoup(response.content, 'html.parser')
 # s = soup.findAll(True, {'class':["ye-chart-item__rank", "ye-chart-item__title", "ye-chart-item__artist"]})
 
-# no_div_list = []
-# for item in s:
-#     item = str(item)
-#     i = 0
-#     div_tag = ""
-#     if item[:2] == "<d":
-#         while item[i] != ">":
-#             div_tag += item[i]
-#             i += 1
-#         div_tag += ">"
-#         item = item.replace(div_tag, "")
-#     item = item.replace("amp;", "")
-#     item = item.replace("</div>", "")
-#     i = 0
-#     a_tag = ""
-#     if item[:2] == "<a":
-#         while item[i] != ">":
-#             a_tag += item[i]
-#             i += 1
-#         a_tag += ">"
-#     item = item.replace(a_tag, "")
-#     item = item.replace("</a>", "")
-#     no_div_list.append(item)
-# print(no_div_list)
+# clean_soup = remove_long_tags("<div", s)
+# cleaner_soup = remove_long_tags("<a", clean_soup)
 
-# no_div_list = [no_div_list[i:i+3] for i in range(0, len(no_div_list), 3)]
-# artist_dict = {}
-# # for Richard -- this doesn't include rank
-# for element in no_div_list:
-#     artist_dict[element[2]] = element[1]     # key = artist, value = song
-
-# print ("{:<50} {:<50}".format('ARTIST', 'SONG'))
- 
-# # print each data item.
-# for artist, song in artist_dict.items():
-#     # artist, song = song
-#     print ("{:<50} {:<50}".format(artist, song))
-
-# only works for 2019!!!!
-# url = "http://billboardtop100of.com/2019-2/"
-# response = requests.get(url)
-# soup = BeautifulSoup(response.content, 'html.parser')
-# print(soup)
-# s = soup.find_all('p')
-# s = s[:298]     # remove extra unnecessary stuff
-
-# # loop through url to http.get from a new page
-# clean_list = []
-# all_a_tags = []
+# # only works for 2019!!!!
+# data = get_data(2019)
+# # print(soup)
+# music_data = data.find_all('p')
+# music_data = music_data[:298]     # remove extra unnecessary stuff
 
 # # list for all line breaks split up (removing <br/> and splitting there)
 # split_list = []
-# for item in s:
+# for item in music_data:
 #     item = str(item)
 #     if "<br/>" in item:
 #         split_br = item.split("<br/>")
@@ -87,40 +61,6 @@ for item in s:
 #         split_list.append(item)
 
 # # remove all amps, p tags, and \xa0
-# for i in range(len(split_list)):
-#     remove_amp = str(split_list[i]).replace("amp;", "")
-#     remove_p_tag = str(remove_amp).replace("<p>", "")
-#     remove_second_p_tag = str(remove_p_tag).replace("</p>", "")
-#     clean = str(remove_second_p_tag).replace(u"\xa0", u"")
-#     clean_list.append(clean)
-
-# # remove all sites from elements
-# final_list = [] 
-
-# for item in clean_list:
-#     i = 0
-#     a_tag = ""
-#     if item[:2] == "<a":
-#         while item[i] != ">":
-#             a_tag += item[i]
-#             i += 1
-#         a_tag += ">"
-#     item = item.replace(a_tag, "")
-#     item = item.replace("</a>", "")
-#     final_list.append(item)
-
+# clean_list = remove_long_tags("<p", split_list)
+# final_list = remove_long_tags("<a", clean_list)
 # print(final_list)
-# # Split everything into groups of three
-# split_list = [final_list[i:i+3] for i in range(0, len(final_list), 3)]
-
-# artist_dict = {}
-# # for Richard -- this doesn't include rank
-# for element in split_list:
-#     artist_dict[element[2]] = element[1]     # key = artist, value = song
-
-# print ("{:<50} {:<50}".format('ARTIST', 'SONG'))
- 
-# # print each data item.
-# for artist, song in artist_dict.items():
-#     # artist, song = song
-#     print ("{:<50} {:<50}".format(artist, song))
