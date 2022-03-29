@@ -47,7 +47,7 @@ def query_spotify(track,artist):
     return audio_features["tempo"]
 
 # Define a range of years that you'd like to start and stop querying
-start_year = 2020
+start_year = 1940
 end_year = 2021
 
 # Open client to begin requesting data
