@@ -9,4 +9,5 @@ This program should be able to do the following:
 
 
 # dependencies:
-[spotipy](https://spotipy.readthedocs.io/en/2.19.0/): a lightweight spotify python wrapper.
+[spotipy](https://spotipy.readthedocs.io/en/2.19.0/): a lightweight spotify python wrapper. Install with `pip install spotipy`.
+
