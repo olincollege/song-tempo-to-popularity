@@ -1,22 +1,28 @@
-"""
-Visualizes the data produced by billboard.py and bpm.py for the computational essay
-"""
-
 from numpy import disp
 import pandas as pd
 import matplotlib.pyplot as plt
 
 def yearvsbpm():
+    """
+    This function reads data from bpmFULL.csv and averages the bpm from each year. It then plots average BPM in the year against the year to derive a possible trend.
+    This function has no inputs necessary to call it.
+    This function outputs a line graph that represents the Average BPM vs Year.
+    """
     df=pd.read_csv("data/bpmFULL.csv")
     mean_data = df.mean(axis = 0).reset_index()
     mean_data.columns = ['year', 'mean']
-    plt.plot(mean_data["year"], mean_data["mean"])
+    plt.plot(mean_data["year"].astype(int), mean_data["mean"])
     plt.xlabel("Year")
     plt.ylabel("Average BPM")
     plt.title("Average BPM vs Year")
     plt.show()
 
 def scatterplot():
+    """
+    This function reads data from bpm.csv moves it into an array for each decade. It then plots each song in the top 100 against it's bpm to derive a possible trend.
+    This function has no inputs necessary to call it.
+    This function outputs a scatter plot that represents the Average BPM vs Popularity vs Decade.
+    """
     df2 = pd.read_csv("data/bpm.csv")
     x = [df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0'], df2['Unnamed: 0']]
     forties_data = [df2['1940'], df2['1941'], df2['1942'], df2['1943'], df2['1944'], df2['1945'], df2['1946'], df2['1947'], df2['1948'], df2['1949']]
@@ -42,6 +48,11 @@ def scatterplot():
     plt.show()
 
 def popularityvsbpm():
+    """
+    This function reads data from bpmFULL.csv and averages the bpm from each rank. It then plots average BPM in the rank against it's popularity to derive a possible trend.
+    This function has no inputs necessary to call it.
+    This function outputs a line graph that represents the Average BPM vs Popularity.
+    """
     df3=pd.read_csv("data/bpmFULL.csv")
     mean_data = df3.mean(axis = 1).reset_index()
     mean_data.columns = ['popularity', 'mean']
@@ -50,3 +61,4 @@ def popularityvsbpm():
     plt.ylabel("Average BPM")
     plt.title("Average BPM vs Popularity")
     plt.show()
+scatterplot()
