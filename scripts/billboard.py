@@ -14,27 +14,26 @@ rank, artist, and song for each top song of the year. It then produces a csv
 containing a 80x100 table (column = year, row = song) that will then be run
 through the Spotipy API wrapper to find the tempo (BPM) of each song.
 """
-from billboard_functions import *
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-
+from billboard_functions import *   # wildcard import how to fix
 # Create the data frame
-df = pd.DataFrame(index = range(1,101), columns = range(1940,2021))
+dataframe = pd.DataFrame(index=range(1, 101), columns=range(1940, 2021))
 
-# 1940
+
+# SCRAPE & CLEAN 1940 DATA
 data = get_data(1940)
 music_data = data.find_all("p")
 
-# split list at br end tag
-split_list = []
-for element in music_data[:-1]:
-    element = str(element)
-    split_br = element.split("<br/>")
-    split_list.extend(split_br)
+# split data list at "<br/>"" into elements that contain song information
+split_list = split_and_extend(1940, music_data, "</br>")
 
-remove_n_p = remove_long_tags("<p", split_list)
+# Remove p tags and any other unnecessary characters
+remove_n_p = clean_data("<p", split_list)
 
+# Fix any specific formatting issues and split into elements between rank
+# and song
 split_rank_list = []
 for item in remove_n_p:
     item = item.replace("Opus No. 1", "Opus No.1")
@@ -42,150 +41,128 @@ for item in remove_n_p:
     split_rank = item.split(". ")
     split_rank_list.extend(split_rank)
 
-split_list = []
-for item in split_rank_list:
-    split_song_info = item.split(" – ")
-    split_list.extend(split_song_info)
+# Create the cleaned list of strings by splitting into elements between song
+# and artist
+split_list = split_and_extend(split_rank_list, " – ")
 
+# # Group the elements in the list by three to easily load onto the data frame
 final_list = split_list_into_three(split_list)
-import_to_df(final_list, 1940, df)
+import_to_df(final_list, 1940, dataframe)
 
-# 1941
+
+# SCRAPE & CLEAN 1941 DATA
 split_list = complete_billboard(1941, "td")
-import_to_df(split_list, 1941, df)
+import_to_df(split_list, 1941, dataframe)
 
-
-# 1942
+# SCRAPE & CLEAN 1942 DATA
 data = get_data(1942)
 music_data = data.findAll("p")
 
-# split list at br end tag
-split_list = []
-for element in music_data[:-1]:
-    element = str(element)
-    split_br = element.split("<br/>")
-    split_list.extend(split_br)
+# split data list at "<br/>"" into elements that contain song information
+split_list = split_and_extend(1942, music_data, "</br>")
 
-    # remove extraneous info
-    for item in split_list:
-        if "vocals by" in item:
-            split_list.remove(item)
-        if "vocal by" in item:
-            split_list.remove(item)
-        if "written by" in item:
-            split_list.remove(item)
+remove_p = clean_data("<p", split_list)
+remove_p[85] = "Mr. Five by Five"
 
-# just remove p tags
-filler_list = remove_long_tags("<p", split_list)
+# Remove extraneous information
+removal_list = []
+for item in remove_p:
+    if "vocals by" in item:
+        removal_list.append(item)
+    if "vocal by" in item:
+        removal_list.append(item)
+    if "written by" in item:
+        removal_list.append(item)
+
+for item in removal_list:
+    remove_p.remove(item)
+
+# Clean up by removing p-tags and other unnecessary characters
+filler_list = clean_data("<p", remove_p)
 
 split_by_rank_list = []
 split_by_by_list = []
 clean_list = []
 
-# split by ". " (e.g. "9. Blues in the Night" --> ["9.", "Blues in the Night"])
-for item in filler_list:
-    split_rank = item.split(". ")
-    split_by_rank_list.extend(split_rank)
+# Split by ". " (e.g. "9. Blues in the Night" --> ["9.", "Blues in the Night"])
+split_by_rank_list = split_and_extend(filler_list, ". ")
 
-# split by "by"
-for item in split_by_rank_list:
-    split_song = item.split(" by ")
-    split_by_by_list.extend(split_song)
+# Split song and artist by " by "
+split_by_by_list = split_and_extend(split_by_rank_list, " by ")
 
-for item in split_by_by_list:
-    split_rank = item.split(".")
-    clean_list.extend(split_rank)
-# remove excess info
+# Split by any of the wrongly-formatted songs
+clean_list = split_and_extend(split_by_by_list, ".")
+
+# Remove excess information
+clean_list.remove(clean_list[62])
+clean_list.remove(clean_list[10])
+clean_list.remove(clean_list[11])
+clean_list.remove(clean_list[12])
 clean_list.remove(clean_list[189])
 clean_list.remove(clean_list[190])
 
 final_list = split_list_into_three(clean_list)
-import_to_df(final_list, 1942, df)
+import_to_df(final_list, 1942, dataframe)
 
-# # 1943, 1944
-year = 1943
-while year <= 1944:
-    data = get_data(1943)
+# 1943, 1944
+for year in range(1943, 1945):
+    data = get_data(year)
     music_data = data.find_all("p")
 
     # split list at br end tag
-    split_list = []
-    for element in music_data[:-1]:
-        element = str(element)
-        split_br = element.split("<br/>")
-        split_list.extend(split_br)
-    remove_n_p = remove_long_tags("<p", split_list)
+    split_list = split_and_extend(year, music_data, "<br/>")
+    remove_n_p = clean_data("<p", split_list)
 
-    split_list = []
-    for item in remove_n_p:
-        split_song_info = item.split(" – ")
-        split_list.extend(split_song_info)
+    split_song_artist = split_and_extend(remove_n_p, " – ")
 
-    clean_list = []
-
-    for item in split_list:
-        split_rank = item.split(". ")
-        clean_list.extend(split_rank)
+    clean_list = split_and_extend(split_rank, ". ")
 
     final_list = split_list_into_three(clean_list)
-    import_to_df(final_list, year, df)
+    import_to_df(final_list, year, dataframe)
 
-    year += 1
-
-# 1945 - 2016 contain td tags for the body
-        # not 2013
-year = 1945
-# loop through 1945 to 2016 (all tr tags)
-while year <= 2016:
+# loop through 1945 to 2014 (all tr tags)
+for year in range(1945, 2015):
     split_list = complete_billboard(year, "td")
-    import_to_df(split_list, year, df)
-
-    year += 1
+    import_to_df(split_list, year, dataframe)
 
     # 2013 has different tags, so skip that one
     if year == 2013:
-        year += 1
+        continue
 
 # 2013
 data = get_data(2013)
 music_data = data.find_all("p")
-print(music_data)
 
-# split list at br end tag
-split_list = []
-for element in music_data[:-1]:
-    element = str(element)
-    split_br = element.split("<br/>")
-    split_list.extend(split_br)
-remove_n_p = remove_long_tags("<p", split_list)
+# Split list at br end tag
+split_list = split_and_extend(2013, music_data, "</br>")
 
-split_list = []
-for item in remove_n_p:
-    split_song_info = item.split(" – ")
-    split_list.extend(split_song_info)
+# Separate and clean data
+remove_n_p = clean_data("<p", split_list)
+split_list = split_and_extend(remove_n_p, " – ")
+clean_list = split_and_extend(split_list, ". ")
 
-clean_list = []
-
-for item in split_list:
-    split_rank = item.split(". ")
-    clean_list.extend(split_rank)
-
+# Split into final list of lists to import
 final_list = split_list_into_three(clean_list)
-import_to_df(final_list, 2013, df)
+import_to_df(final_list, 2013, dataframe)
 
 # 2015
 data = get_data(2015)
 music_data = data.findAll("h6")
-clean_data = remove_long_tags("<h6", music_data)
-clean_data.remove(clean_data[78])
-split_list = split_list_into_three(clean_data)
-import_to_df(split_list, 2015, df)
 
-# 2016 
+# Clean data
+clean_list = clean_data("<h6", music_data)
+clean_list.remove(clean_list[78])
+
+# Split into final list of lists to import
+split_list = split_list_into_three(clean_data)
+import_to_df(split_list, 2015, dataframe)
+
+# 2016
 data = get_data(2016)
 music_data = data.findAll("td")
-remove_td = remove_long_tags("<td", music_data)
+remove_td = clean_data("<td", music_data)
 
+# Clean data -- couldn't use clean_data()
 clean_list = []
 for element in remove_td:
     remove_strong = element.replace("<strong>", "")
@@ -193,51 +170,58 @@ for element in remove_td:
     remove_p = remove_strong_end.replace("<p>", "")
     remove_p_end = remove_p.replace("</p>", "")
     clean_list.append(remove_p_end)
-# remove a-tag. cant' use function bc song is BEFORE start of tag
-for i in range(len(clean_list)):
-        if "<" in clean_list[i]:
-            index = clean_list[i].index("<")
-            clean_list[i] = clean_list[i][:index]
 
+# Remove a-tag. Can't use clean_data() because song is BEFORE start of tag
+for i, _ in enumerate(clean_list):
+    clean_list[i] = str(clean_list[i])
+    if "<" in clean_list[i]:
+        index = clean_list[i].index("<")
+        clean_list[i] = clean_list[i][:index]
+
+# Split into final list of lists to import
 split_list = split_list_into_three(clean_list)
-import_to_df(split_list, 2016, df)
+import_to_df(split_list, 2016, dataframe)
 
 # 2017&2018
-year = 2017
-while year <= 2018:
-    data = get_data(2017)
-    music_data = data.findAll(True, {'class':["ye-chart-item__rank", "ye-chart-item__title", "ye-chart-item__artist"]})
-    clean_data = remove_long_tags("<div", music_data)
-    clean_data_2 = remove_long_tags("<a", clean_data)
-    import_to_df(final_list, year, df)
+for year in range(2017, 2019):
+    data = get_data(year)
+    music_data = data.findAll(True, {'class': [
+                              "ye-chart-item__rank", "ye-chart-item__title",
+                              "ye-chart-item__artist"]})
 
-    year += 1
+    # Clean data
+    remove_div = clean_data("<div", music_data)
+    clean_list = clean_data("<a", remove_div)
+    split_list_into_three(clean_list)
+    import_to_df(final_list, year, dataframe)
 
-# only works for 2019!!!!
+
+# 2019
 data = get_data(2019)
 music_data = data.find_all('p')
 music_data = music_data[:298]     # remove extra unnecessary stuff
 
-# list for all line breaks split up (removing <br/> and splitting there)
+# List for all line breaks split up (removing <br/> and splitting there)
 split_list = []
-for item in music_data:
-    item = str(item)
-    if "<br/>" in item:
-        split_br = item.split("<br/>")
+
+for i, _ in enumerate(music_data):
+    music_data[i] = str(music_data[i])
+    if "<br/>" in music_data[i]:
+        split_br = music_data[i].split("<br/>")
         split_list += split_br
     else:
-        split_list.append(item)
+        split_list.append(music_data[i])
 
-# remove all amps, p tags, and \xa0
-clean_list = remove_long_tags("<p", split_list)
-final_list = remove_long_tags("<a", clean_list)
+# Remove all amps, p tags, and \xa0
+clean_list = clean_data("<p", split_list)
+final_list = clean_data("<a", clean_list)
 final_list = split_list_into_three(final_list)
-import_to_df(final_list, 2019, df)
+import_to_df(final_list, 2019, dataframe)
 
 
 # 2020
-url = "http://billboardtop100of.com/billboard-top-100-songs-2020-2/"
-response = requests.get(url)
+URL = "http://billboardtop100of.com/billboard-top-100-songs-2020-2/"
+response = requests.get(URL)
 data = BeautifulSoup(response.content, "html.parser")
 music_data = data.findAll("p")
 music_data = music_data[:-2]
@@ -245,17 +229,21 @@ music_data = music_data[:-2]
 split_by_strong_list = []
 clean_list = []
 cleaner_list = []
-for i in range(len(music_data)):
-    music_data[i] = str(music_data[i])
+
+remove_p = clean_data("<p", music_data)
+
+for i, _ in enumerate(music_data):
+    # music_data[i] = str(music_data[i])
+    remove_p = clean_data("<p", music_data)
     remove_p = music_data[i].replace("<p>", "")
     remove_unit = remove_p.replace(u"\xa0", u"")
     remove_p_end = remove_unit.replace("</p>", "")
     remove_strong = remove_p_end.replace("<strong>", "")
     split_by_strong = remove_strong.split("</strong>")
     split_by_strong_list.extend(split_by_strong)
-clean_list = remove_long_tags("<a", split_by_strong_list)
+clean_list = clean_data("<a", split_by_strong_list)
 
-# remove empty elements
+# Remove all empty elements of clean_list
 filler_list = []
 filler_list = list(filter(None, clean_list))
 filler_list.remove(filler_list[9])
@@ -271,4 +259,4 @@ for element in filler_list:
         final_list.append(element)
 split_list = split_list_into_three(final_list)
 
-import_to_df(split_list, 2020, df)
+import_to_df(split_list, 2020, dataframe)
