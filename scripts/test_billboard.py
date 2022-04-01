@@ -11,39 +11,43 @@ function to generate the final list of lists of cleaned music data.
 import pytest
 from billboard_functions import (
     clean_data,
-    split_by_br,
     split_and_extend,
     split_list_into_three,
 )
-# HOW TO MAKE THE UNIT TESTS TEST THE FUNCTION IN PARTICULAR???
 
 # Check that the split_list_into_three function splits a list of strings into
 # a list of lists for every three elements in the original list.
-REMOVE_TAGS_CASES = [
+CLEAN_DATA_CASES = [
     # Case where the start tag is in the middle of the string.
-    (["abcd<a89%justinbieber>dcba</a>"], ["abcddcba"]),
+    (("<a",["abcd<a89%justinbieber>dcba</a>"]), ["dcba"]),
     # Case with no start tag but has an end tag.
-    (["theweeknd</a>usher"],["theweekndusher"]),
+    (("<p", ["theweeknd</p>usher"]),["theweekndusher"]),
     # Case where everything is encased in a start tag.
-    (["<atheweeknd>", ""]),
+    (("<div", ["<divtheweeknd>"]), [""]),
     # A tag type that is not in the tag_types list.
-    (["abc<li theweeknd>"], ["abc<li theweeknd>"]),
+    (("<h6", ["abc<li theweeknd>"]), ["abc<li theweeknd>"]),
     # Case with extra info (\n, amp;, \xa0)
-    (["abc/n<a the weeknd>", "justin bieber \xa0&amp;nicki minaj\n"],
-    ["abc", "justin bieber & nicki minaj"]),
+    (("<td", ["abc/n<td the weeknd>", "justin bieber \xa0&amp; nicki minaj\n"]),
+    ["", "justin bieber & nicki minaj"]),
 ]
 
+# Couldn't figure out how to test bs4 BeautifulSoup elemeents.
 SPLIT_EXTEND_CASES = [
     # Case with multiple br end tags.
-    (["1. All Me Whitney<br/>2. Umbrella Rihanna<br/>3. Baby Justin"],
-    ["1. All Me Whitney, 2. Umbrella Rihanna, 3. Baby Justin"]),    # how to make element bs4 BeautifulSoup type
-    # Case with no br end tags.
-    (["1. All Me Whitney 2. Umbrella Rihanna"],
+    ((1945, ["1. All Me Whitney<br/>2. Umbrella Rihanna<br/>3. Baby Justin"], "<br/>"),
+    ["1. All Me Whitney", "2. Umbrella Rihanna", "3. Baby Justin"]),
+    # Case with no br end tags and a year that isn't actually searched for.
+    ((2020, ["1. All Me Whitney 2. Umbrella Rihanna"], "<br/>"),
     ["1. All Me Whitney 2. Umbrella Rihanna"]),
     # Case with br tag in the beginning.
-    (["</br>1. All Me Whitney</br>2. Umbrella Rihanna"],
+    ((2019, ["<br/>1. All Me Whitney<br/>2. Umbrella Rihanna"], "<br/>"),
     ["", "1. All Me Whitney", "2. Umbrella Rihanna"]),
-    # Any other tests?
+    # Check case with different tag.
+    ((2015, ["1. All Me - Whitney 2. Umbrella - Rihanna"], ". "),
+    ["1", "All Me - Whitney 2", "Umbrella - Rihanna"]),
+    # Check one of the years in special_years.
+    ((1942, ["All Me - Whitney", "Umbrella - Rihanna"], " - "),
+    ["All Me", "Whitney"])
 ]
 
 SPLIT_LIST_CASES = [
@@ -57,12 +61,11 @@ SPLIT_LIST_CASES = [
     # An empty list.
     ([], []),
     # A list of length less than three.
-    (['2', 'Sunflower'],
-    [['2', 'Sunflower']])
+    (['2', 'Sunflower'], [['2', 'Sunflower']])
 ]
 
 @pytest.mark.parametrize("source_text, split_text", SPLIT_LIST_CASES)
-def clean_data(source_text, split_text):
+def test_split_list_into_three(source_text, split_text):
     """
     Check that remove_tags() removes the information within beginning and
     end tags.
@@ -72,10 +75,10 @@ def clean_data(source_text, split_text):
         split_text: A list of lists representing the strings in source_text
             grouped by three.
     """
-    assert clean_data(source_text) == split_text
+    assert split_list_into_three(source_text) == split_text
 
-@pytest.mark.parametrize("source_text, split_list", SPLIT_EXTEND_CASES)
-def split_and_extend(source_text, split_list):
+@pytest.mark.parametrize("source_text, result_list", SPLIT_EXTEND_CASES)
+def test_split_and_extend(source_text, result_list):
     # HOW TO KNOW WHAT CHARACTER STRING IT'S LOOKING FOR?
     """
     Check that split_and extend() splits string in all instances of a given
@@ -87,10 +90,13 @@ def split_and_extend(source_text, split_list):
         split_list: A list of strings representing the string in source_text
             split at instances of the given char string.
     """
-    assert clean_data(source_text) == split_list
+    year = source_text[0]
+    split_list = source_text[1]
+    char = source_text[2]
+    assert split_and_extend(year, split_list, char) == result_list
 
-@pytest.mark.parametrize("source_text, clean_text", REMOVE_TAGS_CASES)
-def clean_data(source_text, clean_text):
+@pytest.mark.parametrize("source_text, clean_text", CLEAN_DATA_CASES)
+def test_clean_data(source_text, clean_text):
     """
     Check that remove_tags() removes the information within beginning and
     end tags.
@@ -100,4 +106,6 @@ def clean_data(source_text, clean_text):
         split_text: A list of strings representing the source text without
             tags and extraneous characters or information.
     """
-    assert clean_data(source_text) == clean_text
+    tag_type = source_text[0]
+    long_list = source_text[1]
+    assert clean_data(tag_type, long_list) == clean_text

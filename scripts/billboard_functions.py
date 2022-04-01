@@ -110,7 +110,7 @@ def split_and_extend(year, split_list, char):
             contains uncleaned music data.
 
         char: A string that represents the characters to split the list by.
-    
+
     Returns:
         split_extend_list: A list of strings with each chunk of new song
             information as its own element.
@@ -121,9 +121,10 @@ def split_and_extend(year, split_list, char):
 
     if year in special_years:
         split_list = split_list[:-1]
-    for item in split_list:
-        split_list[item] = str(split_list[item])
-        split_element = item.split(char)
+
+    for i, _ in enumerate(split_list):
+        split_list[i] = str(split_list[i])
+        split_element = split_list[i].split(char)
         split_extend_list.extend(split_element)
     return split_extend_list
 
