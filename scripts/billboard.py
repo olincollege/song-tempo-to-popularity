@@ -17,7 +17,8 @@ through the Spotipy API wrapper to find the tempo (BPM) of each song.
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from billboard_functions import *   # wildcard import how to fix
+from billboard_functions import complete_billboard, get_data, clean_data, \
+import_to_df, split_and_extend, split_list_into_three
 # Create the data frame
 dataframe = pd.DataFrame(index=range(1, 101), columns=range(1940, 2021))
 
@@ -43,7 +44,7 @@ for item in remove_n_p:
 
 # Create the cleaned list of strings by splitting into elements between song
 # and artist
-split_list = split_and_extend(split_rank_list, " – ")
+split_list = split_and_extend(1940, split_rank_list, " – ")
 
 # # Group the elements in the list by three to easily load onto the data frame
 final_list = split_list_into_three(split_list)
@@ -85,13 +86,13 @@ split_by_by_list = []
 clean_list = []
 
 # Split by ". " (e.g. "9. Blues in the Night" --> ["9.", "Blues in the Night"])
-split_by_rank_list = split_and_extend(filler_list, ". ")
+split_by_rank_list = split_and_extend(1942, filler_list, ". ")
 
 # Split song and artist by " by "
-split_by_by_list = split_and_extend(split_by_rank_list, " by ")
+split_by_by_list = split_and_extend(1942, split_by_rank_list, " by ")
 
 # Split by any of the wrongly-formatted songs
-clean_list = split_and_extend(split_by_by_list, ".")
+clean_list = split_and_extend(1942, split_by_by_list, ".")
 
 # Remove excess information
 clean_list.remove(clean_list[62])
@@ -113,9 +114,9 @@ for year in range(1943, 1945):
     split_list = split_and_extend(year, music_data, "<br/>")
     remove_n_p = clean_data("<p", split_list)
 
-    split_song_artist = split_and_extend(remove_n_p, " – ")
+    split_song_artist = split_and_extend(year, remove_n_p, " – ")
 
-    clean_list = split_and_extend(split_rank, ". ")
+    clean_list = split_and_extend(year, split_rank, ". ")
 
     final_list = split_list_into_three(clean_list)
     import_to_df(final_list, year, dataframe)
@@ -138,8 +139,8 @@ split_list = split_and_extend(2013, music_data, "</br>")
 
 # Separate and clean data
 remove_n_p = clean_data("<p", split_list)
-split_list = split_and_extend(remove_n_p, " – ")
-clean_list = split_and_extend(split_list, ". ")
+split_list = split_and_extend(2013, remove_n_p, " – ")
+clean_list = split_and_extend(2013, split_list, ". ")
 
 # Split into final list of lists to import
 final_list = split_list_into_three(clean_list)
