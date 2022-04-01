@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 
 def yearvsbpm():
     """
-    This function reads data from bpmFULL.csv and averages the bpm from each
+    This function reads data from bpm2.csv and averages the bpm from each
     year. It then plots average BPM in the year against the year to derive a
     possible trend.
     This function has no inputs necessary to call it.
     This function outputs a line graph that represents the Average BPM vs Year.
     """
-    dataframe=pd.read_csv("data/bpmFULL.csv")
+    dataframe=pd.read_csv("data/bpm2.csv")
     mean_data = dataframe.mean(axis = 0).reset_index()
     mean_data.columns = ['year', 'mean']
     plt.plot(mean_data["year"].astype(int), mean_data["mean"])
@@ -66,12 +66,12 @@ def scatterplot():
 
 def popularityvsbpm():
     """
-    This function reads data from bpmFULL.csv and averages the bpm from each
+    This function reads data from bpm2.csv and averages the bpm from each
     rank. It then plots average BPM in the rank against it's popularity to derive a possible trend.
     This function has no inputs necessary to call it.
     This function outputs a line graph that represents the Average BPM vs Popularity.
     """
-    df3=pd.read_csv("data/bpmFULL.csv")
+    df3=pd.read_csv("data/bpm2.csv")
     mean_data = df3.mean(axis = 1).reset_index()
     mean_data.columns = ['popularity', 'mean']
     plt.plot(mean_data["popularity"], mean_data["mean"])

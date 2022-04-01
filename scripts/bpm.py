@@ -20,7 +20,7 @@ import yaml
 
 # import the YAML file as a configuration file so that we can request spotify privately
 # DON'T UPLOAD CONFIG.YAML TO GITHUB
-with open("../config.yaml", "r") as yaml_file:
+with open("../config.yaml", "r", encoding="utf-8") as yaml_file:
     config = yaml.safe_load(yaml_file)
 
 
@@ -44,7 +44,7 @@ def query_spotify(track, artist):
     search_results = sp.search(q=search_query)
     uri = search_results["tracks"]["items"][0]["uri"]
     audio_features = sp.audio_features(uri)[0]
-    return audio_features["tempo"]
+    return audio_features["Danceability"]
 
 
 # Define a range of years that you'd like to start and stop querying
@@ -87,7 +87,7 @@ for i in range(START_YEAR, END_YEAR+1):
             tempo_df.at[j, i] = query_spotify(next_entry[1], next_entry[2])
 
         # If song isn't found, set the value as NaN so it doesn't mess with the average
-        except Exception as e:
+        except (TypeError,IndexError,ValueError) as e:
             print(e)
 
             tempo_df.at[j, i] = None
@@ -96,4 +96,5 @@ for i in range(START_YEAR, END_YEAR+1):
     sleep(1)
 
 # Write the resulting dataframe to a CSV file that visualization.py can use
-tempo_df.to_csv("../data/bpmFULL.csv")
+tempo_df.to_csv("../data/bpm.csv")
+tempo_df.to_csv("../data/bpm2.csv")
